@@ -7,26 +7,18 @@ from pykeyboard import PyKeyboard
 k = PyKeyboard()
 
 def init():
-	#print('Turning off HDMI...')
-	time.sleep(2)
-	#hdmi_off()
+	print('Heyyy familien! :)) Starter appen nuu - to sek ^^,')
 	turn_off_auto_screen_blank()
-	#prevent_evening_or_weekend_trigger()
+	time.sleep(4)
 	while True:
-		#if weekday, run app (saturday is 5)
-		if datetime.datetime.now().weekday() < 6:
-			check_time()
-		else:
-			prevent_evening_or_weekend_trigger()
-
+		check_time()
 
 #Input
 url_dict = {
 	'aukinfo': 'https://aukinfo.herokuapp.com',
-	'Calendar': 'https://www.calendar.google.com/calendar/r',
-	'Weather Short Term': 'https://www.yr.no/place/Norway/Trondelag/Trondheim/Trondheim/hour_by_hour.html',
-	'Weather Long Term': 'https://www.yr.no/place/Norway/Trondelag/Trondheim/Trondheim/long.html',
-	}
+	'Weather Short Term': 'https://www.yr.no/sted/Norge/Tr%C3%B8ndelag/Trondheim/Trondheim/time_for_time.html',
+	'Weather Long Term': 'https://www.yr.no/place/Norway/Tr%C3%B8ndelag/Trondheim/Trondheim/long.html',
+}
 
 
 wake_up_time = 600 #int(input('Enter Wake Up Time: '))
@@ -34,10 +26,6 @@ shut_down_time = 2200 #int(input('Enter Shut Down Time: '))
 display_is_off = True
 
 
-def turn_off_auto_screen_blank():
-	os.system('sudo xset s off')
-	os.system('sudo xset -dpms')
-	os.system('sudo xset s noblank')
 
 
 #Time keeping
@@ -48,48 +36,39 @@ def now_time():
 	return now_time
 
 
-def prevent_evening_or_weekend_trigger():
-	print('Preventing evening trigger')
-	while now_time() >= shut_down_time or datetime.datetime.now().weekday() >= 5:
-		time.sleep(10)
-
-
 #Check if time matches set wake up time
 def check_time():
-	#print('runnning check_time')
 	global display_is_off
 	if display_is_off and wake_up_time <= now_time() < shut_down_time:
-		print('\n================================================')
-		print('waking up')
-		#hdmi_on()
+		open_web()
 		time.sleep(3)
-		while(True):
+		hdmi_on()
+		while(wake_up_time <= now_time() < shut_down_time):
 			for i in range(0, 180):
+				if not(wake_up_time <= now_time() < shut_down_time):
+						break
 				ctrl_tab()
 				time.sleep(12)
 				if i == 0:
 					refresh_tab(3)
+					
 
 	if not display_is_off and now_time() >= shut_down_time:
 		close_web()
-		print('going to sleep in 10 sek')
+		print('Klokken er ' + str(now_time()) + ' jeg tar jeg en blund - God natt :))')
 		time.sleep(10)
 		hdmi_off()
-
-
-def hdmi_on():
-	print('turning monitor on. Time is: ' + str(now_time()))
-	os.system("tvservice -p")
-	global display_is_off
-	display_is_off = False
-
+	success()
 
 def open_web():
-	webbrowser.get(using='chromium-browser').open(url_dict['Calendar'])
-	time.sleep(3)
-	#webbrowser.get(using='chromium-browser').open(url_dict['Weather Long Term'])
+	webbrowser.get(using='chromium-browser').open('about:newtab')
 	time.sleep(3)
 	k.tap_key(k.function_keys[11])
+	time.sleep(3)
+	webbrowser.get(using='chromium-browser').open(url_dict['Weather Short Term'])
+	time.sleep(3)
+	webbrowser.get(using='chromium-browser').open(url_dict['Weather Long Term'])
+	time.sleep(3)
 
 
 def ctrl_tab():
@@ -107,7 +86,9 @@ def refresh_tab(number_of_tabs):
 		k.tap_key('r')
 		k.release_key(k.control_l_key)
 		time.sleep(1)
-		ctrl_tab()
+		if i != number_of_tabs-1:
+			ctrl_tab()
+
 
 def close_web():
 	k.press_key(k.control_l_key)
@@ -115,17 +96,31 @@ def close_web():
 	k.release_key(k.control_l_key)
 
 
+def hdmi_on():
+	print('\n================================================')
+	print('turning monitor on. Time is: ' + str(now_time()))
+	os.system("vcgencmd display_power 1")
+	global display_is_off
+	display_is_off = False
+	
+	
 def hdmi_off():
-	os.system("tvservice -o")
+	os.system("vcgencmd display_power 0")
 	global display_is_off
 	display_is_off = True
 
 
 def success():
 	print('\n================================================')
-	os.system("tvservice -p")
+	os.system("vcgencmd display_power 1")
 	print('success!')
 	sys.exit('System exit, app terminated')
+
+
+def turn_off_auto_screen_blank():
+	os.system('sudo xset s off')
+	os.system('sudo xset -dpms')
+	os.system('sudo xset s noblank')
 
 
 if __name__ == "__main__":
